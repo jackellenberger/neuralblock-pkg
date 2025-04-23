@@ -21,7 +21,7 @@ RUN pip install -e /app
 ENV NB_THRESH=0.60
 ENV NB_CONFIDENCE=0.80
 ENV NB_MIN_WORD_COUNT=6
-ENV NB_WPM=3
+ENV NB_WPS=2.8
 
 # Set the command to run the example script relative to the WORKDIR (/app)
 CMD ["python", "examples/example.py"]
