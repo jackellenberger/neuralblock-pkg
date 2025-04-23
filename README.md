@@ -1,44 +1,59 @@
-# NeuralBlock
-NeuralBlock (NB) is a neural network built using Keras/Tensorflow that detects in-video YouTube sponsorships. There is support for both predicting (1) whether or not a text excerpt is a sponsorship (spot) or (2) whether or not this word in the sequence is part of a sponsorship.
+# NeuralBlock (Package)
 
-NB is loosely based on and inspired by this [project](https://github.com/Sponsoff/sponsorship_remover). Unlike the aforementioned project, this project leverages the crowd-sourced labels provided by [SponsorBlock](https://github.com/ajayyy/SponsorBlock).
+This repository now contains the `neuralblock` Python package directly at its root, designed to identify sponsored segments within video transcripts. It is a refactoring of the core AI model logic from the original [`neuralblock`](https://github.com/andrewzlee/NeuralBlock) project into a reusable library that is *not* dependent on the YouTube API.
 
-Some examples of NB's predictions are provided in the `examples/` directory. The code for the [web application](https://ai.neuralblock.app) is also provided and can be run locally.
+## Relationship to the Original Project
 
-A [video demo](https://youtu.be/WuP-UjGchV0) is available on YouTube.
+The original `neuralblock` project provided a Django web application that accepted a YouTube video ID, downloaded the transcript using the YouTube API, ran the sponsored segment detection model, and displayed the results.
 
-## High Level Summary
-1. NeuralBlock extracts transcripts from YouTube with [YouTubeTranscriptApi](https://pypi.org/project/youtube-transcript-api/).
-2. The SponsorBlock community has already pre-labeled sponsors.
-3. The timestamps from (2) are used to find the sections in the transcript that are sponsorships, thereby creating a training set.
-4. The sequence of text is tokenized using the top 10,000 words found in sponsorships. Note, using a pre-trained word embedding by [fastText](https://fasttext.cc/) does not yield better performance.
-5. A bidirectional LSTM RNN is trained.
+This package focuses solely on the core model prediction and transcript processing logic. It **removes** the dependencies on the Django web server and direct YouTube API interactions. Instead, it provides a Python package that can be imported and used programmatically with transcript data provided by the user in a specific format.
 
-## Using the Web App
-**Somewhat outdated. To be updated later. Dockerfile can be used**
+## Functionality
 
-The `app/` directory contains a simple flask application that performs the primary functions of `predict_stream.py` and `predict_timestamps.py`, and presents the results in the browser.
+The main components of this package, now located at the repository root, are:
 
-1. Install flask and other necessary libraries.
-2. Move the models from the `data` folder into `app/models`. There should be no subfolders.
-3. Run `python app/application.py` from a terminal.
-4. Go to `localhost:5000` in a browser.
-5. Submit a valid video ID and click Submit
+-   `neuralblock.py`: Contains the `NeuralBlockStream` class, which handles loading the trained AI model and tokenizer and making predictions on a stream of text derived from a transcript.
+-   `transcript_parser.py`: Provides the `parse_transcript` function to process raw transcript data (expected to be a list of dictionaries with 'start', 'duration', 'text' keys) into the format required for the `NeuralBlockStream` class.
 
-The results should return in a few seconds. Note, if a good transcript cannot be extracted by YouTubeTranscriptApi, the app will fail.
+The package expects the model and tokenizer files to be available locally. These are now located in the `data/` directory at the repository root.
 
-## Predicting On New Data
-**Somewhat outdated. To be updated later.**
-1. Install the python libraries TensorFlow and YouTubeTranscriptApi
-2. Update paths if necessary
-3. Provide a video id (vid). The network was trained on the database as of 3/3/20. Use a video that was created after that date to ensure that the video hasn't already been seen.
-4. Run predict_stream.py
-5. Manually inspect the output stored in the variable `df` or `results`.
+## Tuning Parameters
 
-Note, overusing YouTubeTranscriptApi can get your IP banned.
+The behavior of the sponsored segment identification can be tuned using the following environment variables when running the application (e.g., via Docker):
 
-## Future Work
-1. **Better transcripts:** NeuralBlock depends on being able to download the full closed captioning. Some creators disallow auto-generated English captions, making it impossible for NB to predict on. The latter could be resolved through existing speech-to-text projects such as Mozilla's [DeepSpeech](https://github.com/mozilla/DeepSpeech).
-2. **More accurate labels:** The labels is imperfect because we don't know the moment a word is spoken, only an approximate time. For example, silence (visual only ad) or really short ad segments are hard to account for.
-3. **Incorporate video:** Visual cues, such as scene cuts, are also valuable in determining ads and can help with (2).
-4. **Support for other languages:** Only English is supported at this moment.
+-   `NB_THRESH`: **Minimum confidence threshold** to *start* and *end* a potential sponsor segment. A higher value makes segments shorter and requires higher confidence to start/end. Default: `0.60`
+-   `NB_CONFIDENCE`: **Higher confidence threshold** that must be reached at some point within a potential segment for it to be considered valid. Default: `0.80`
+-   `NB_MIN_WORD_COUNT`: **Minimum number of words** required for a predicted segment to be considered valid and not tossed. Default: `6`
+-   `NB_WPM`: **Estimated words per minute** used for calculating timestamps within clauses when the original transcript data is not per-word. Default: `3`
+
+These can be set when running the Docker container using the `-e` flag (e.g., `docker run -e NB_THRESH=0.50 neuralblock_package`).
+
+## Example Usage
+
+An example script demonstrating how to use the `neuralblock` package is located in the `examples/` directory at the repository root.
+
+The example script (`examples/example.py`):
+1.  Loads a sample transcript from a CSV file (`examples/episode_43f6d97d_segments.csv`), which follows a format similar to the original project's transcript output.
+2.  Uses the `parse_transcript` function to process this data.
+3.  Instantiates the `NeuralBlockStream` class, loading the model and tokenizer from `data/`.
+4.  Uses the `predict_stream` method to get predictions.
+5.  Uses the `get_sponsor_timestamps` method to identify the timestamps of potential sponsored segments.
+6.  Prints the resulting timestamps.
+
+The example script is configured to load the model, tokenizer, and transcript paths from environment variables (`NEURALBLOCK_MODEL_PATH`, `NEURALBLOCK_TOKENIZER_PATH`, `NEURALBLOCK_TRANSCRIPT_PATH`), with default paths pointing to the files within the `data/` and `examples/` directories at the repository root.
+
+## Running the Example with Docker
+
+A `Dockerfile` is included at the repository root to build a containerized environment for running the example script. To build and run the Docker image from the project's root directory:
+
+```bash
+# Build the image
+docker build -t neuralblock_package .
+
+# Run the container
+docker run neuralblock_package
+```
+
+This will build an image based on the `Dockerfile` at the root, using the entire repository as the build context. It copies the package code and data into the container, installs the necessary dependencies, and then runs the example script.
+
+This package provides the core sponsored segment detection functionality as a reusable Python library, allowing integration into different applications or workflows without the overhead of the original web server.
