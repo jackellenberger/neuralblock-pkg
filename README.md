@@ -12,10 +12,10 @@ This package focuses solely on the core model prediction and transcript processi
 
 The main components of this package, now located at the repository root, are:
 
--   `neuralblock.py`: Contains the `NeuralBlockStream` class. Its `__init__` method can now be called without arguments, and it will automatically look for the trained AI model (`nb_stream_fasttext_10k.h5`) and tokenizer (`tokenizer_stream_10k.json`) in the `data/` directory within the installed package. You can still provide `model_path` and `tokenizer_path` arguments to the constructor if you need to load models from a different location. The class includes methods for making predictions on a stream of text and identifying sponsor timestamps (`process_transcript_list`).
+-   `neuralblock.py`: Contains the `NeuralBlockStream` class. Its `__init__` method can now be called without arguments, and it will automatically look for the trained AI model (`nb_stream_fasttext_10k.h5`) and tokenizer (`tokenizer_stream_10k.json`) in the `models/` directory within the installed package. You can still provide `model_path` and `tokenizer_path` arguments to the constructor if you need to load models from a different location. The class includes methods for making predictions on a stream of text and identifying sponsor timestamps (`process_transcript_list`).
 -   `transcript_parser.py`: Provides the `parse_transcript` function to process raw transcript data (expected to be a list of dictionaries with 'start', 'duration', 'text' keys) into the format required internally. This function is used by `NeuralBlockStream.process_transcript_list` internally, so users typically won't need to interact with it directly.
 
-The package expects the model and tokenizer files to be available locally. By default, `NeuralBlockStream` looks for these in the `data/` directory at the repository root when installed.
+The package expects the model and tokenizer files to be available locally. By default, `NeuralBlockStream` looks for these in the `models/` directory at the repository root when installed.
 
 ## Tuning Parameters
 
@@ -65,7 +65,7 @@ def main():
         nb_model = NeuralBlockStream() # Instantiating without arguments
     except FileNotFoundError as e:
         print(f"Error loading model or tokenizer: {e}")
-        print("Please ensure the model and tokenizer files exist in the expected 'data/' directory within the package or provide custom paths.")
+        print("Please ensure the model and tokenizer files exist in the expected 'models/' directory within the package or provide custom paths.")
         return
     except Exception as e:
         print(f"An unexpected error occurred during model instantiation: {e}")

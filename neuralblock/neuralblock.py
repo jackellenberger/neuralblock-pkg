@@ -5,16 +5,17 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
-from transcript_parser import parse_transcript
+# Use relative import for transcript_parser within the same package
+from .transcript_parser import parse_transcript
 
 
 class NeuralBlockStream:
     # Default paths for model and tokenizer relative to the package directory
     DEFAULT_MODEL_PATH = os.path.join(
-        os.path.dirname(__file__), "data/nb_stream_fasttext_10k.h5"
+        os.path.dirname(__file__), "models/nb_stream_fasttext_10k.h5"
     )
     DEFAULT_TOKENIZER_PATH = os.path.join(
-        os.path.dirname(__file__), "data/tokenizer_stream_10k.json"
+        os.path.dirname(__file__), "models/tokenizer_stream_10k.json"
     )
 
     def __init__(self, model_path=None, tokenizer_path=None):
