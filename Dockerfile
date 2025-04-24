@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY requirements-convert.txt .
+RUN pip install -r requirements-convert.txt
+
 # Copy the contents of the package directory (build context) into the working directory /app
 # This copies __init__.py, neuralblock.py, setup.py, data/, examples/, etc. into /app
 COPY . /app/
