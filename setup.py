@@ -7,7 +7,7 @@ setup(
     packages=find_packages(where='.'), # Find packages in the current directory
     include_package_data=True, # Include non-code files specified in MANIFEST.in
     install_requires=[
-        "tensorflow-cpu",
+        "tflite-runtime",
         "numpy"
     ],
     # Metadata
